@@ -1,0 +1,45 @@
+---
+title: "geoarrow-r"
+---
+
+## `geoarrow-r` R package
+
+- [geoarrow-r](https://geoarrow.org/geoarrow-r/)
+
+```{r}
+# packages
+librarian::shelf(
+  arrow, dplyr, geoarrow, here, mapview, sf, tibble,
+  quiet = T)
+
+# paths
+nc_gp <- system.file("gpkg/nc.gpkg", package = "sf")
+nc_pq <- here("data/nc.parquet")
+
+# read geopackage
+nc <- read_sf(nc_gp)
+
+# show North Carolina counties
+mapView(nc)
+
+# write parquet
+if (!file.exists(nc_pq))
+  nc |> 
+    as_tibble() |> 
+    write_parquet(nc_pq)
+
+# compare file sizes
+tibble(
+  obj = c("nc_gp", "nc_pq")) |>
+  mutate(
+    mb = file.info(c(nc_gp, nc_pq))$size/1024^2)
+
+# filter and map
+open_dataset(nc_pq) |> 
+  filter(startsWith(NAME, "A")) |>
+  select(NAME, geom) |> 
+  st_as_sf() |> 
+  mapView(layer.name = "A counties")
+```
+
+
